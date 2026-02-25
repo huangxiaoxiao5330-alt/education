@@ -5,15 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>青少儿童AI思维5维测试</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
-        :root { --primary-yellow: #FFD700; --soft-yellow: #FFF9E6; --deep-yellow: #F4B400; --text-color: #5A4012; --bg-color: #FEFDF7; --accent-red: #FF4D4D; --success-green: #2E7D32; }
+        :root { --primary-yellow: #FFD700; --soft-yellow: #FFF9E6; --deep-yellow: #F4B400; --text-color: #5A4012; --bg-color: #FEFDF7; --accent-red: #FF4D4D; }
         body { font-family: 'PingFang SC', sans-serif; background: var(--bg-color); color: var(--text-color); margin: 0; padding: 15px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 600px; background: white; padding: 25px; border-radius: 35px; border: 4px solid var(--primary-yellow); box-shadow: 0 10px 0 var(--primary-yellow); position: relative; }
         
+        /* 标题 */
         .header { text-align: center; margin-bottom: 25px; }
         .header h1 { color: var(--deep-yellow); font-size: 26px; margin: 0; }
         
-        /* 进度条样式 */
+        /* 进度条：5段大点，每段4小格 */
         .progress-stepper { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding: 0 10px; position: relative; }
         .step-dot { width: 10px; height: 10px; background: #DDD; border-radius: 50%; z-index: 2; position: relative; }
         .step-dot.active { background: var(--deep-yellow); }
@@ -22,6 +24,7 @@
         .progress-line { position: absolute; top: 50%; left: 10px; right: 10px; height: 4px; background: #EEE; transform: translateY(-50%); z-index: 1; }
         .progress-line-fill { position: absolute; top: 0; left: 0; height: 100%; background: var(--primary-yellow); transition: 0.4s; width: 0%; }
 
+        /* 题目展示 */
         .question-box { display: none; }
         .question-box.active { display: block; animation: fadeIn 0.4s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -38,19 +41,16 @@
         button { flex: 2; background: var(--deep-yellow); color: white; border: none; padding: 16px; border-radius: 50px; font-size: 17px; cursor: pointer; font-weight: bold; box-shadow: 0 5px 0 #D49C00; }
         .prev-btn { flex: 1; background: #EEE; color: #999; box-shadow: 0 5px 0 #CCC; }
 
-        /* 报告单样式优化 */
+        /* 报告分析 */
         #result-area { display: none; }
         .report-card { background: #FFF; border-radius: 25px; padding: 20px; margin-bottom: 20px; border: 2px solid #F0F0F0; }
         .highlight-tag { color: var(--accent-red); font-weight: bold; font-size: 20px; }
-        
-        .analysis-box { margin-top: 20px; }
         .analysis-item { padding: 15px; border-radius: 18px; margin-bottom: 15px; border-left: 6px solid; }
         .analysis-item.pro { background: #F0FFF4; border-color: #48BB78; }
         .analysis-item.con { background: #FFF5F5; border-color: #F56565; }
-        .analysis-item h4 { margin: 0 0 8px 0; font-size: 17px; }
         .case-box { background: rgba(255,255,255,0.6); padding: 12px; border-radius: 12px; margin-top: 10px; font-size: 13px; line-height: 1.6; border: 1px dashed rgba(0,0,0,0.1); }
 
-        /* 右下角个人名片突出化 */
+        /* 规划师名片 */
         .planner-card { position: fixed; bottom: 20px; right: 20px; background: linear-gradient(135deg, #FF2442, #FF5A77); color: white; padding: 12px 20px; border-radius: 20px 20px 5px 20px; box-shadow: 0 10px 20px rgba(255,36,66,0.3); z-index: 1000; display: flex; flex-direction: column; align-items: flex-end; }
         .planner-card b { font-size: 15px; letter-spacing: 1px; }
         .planner-card span { font-size: 11px; opacity: 0.9; margin-top: 4px; background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px; }
@@ -87,14 +87,21 @@
             <canvas id="radarChart" style="max-height: 220px;"></canvas>
         </div>
 
-        <div id="dynamic-analysis" class="analysis-box">
+        <div id="dynamic-analysis">
             <p style="text-align:center; color:#996600; font-weight:bold;">现在我们来分析一下你的表现吧！✨</p>
-            </div>
+        </div>
 
         <div class="report-card" style="background: linear-gradient(135deg, #FFF9E6, #FFF); border: 2px solid var(--primary-yellow);">
             <h4 style="margin-top:0; color:var(--deep-yellow);">🚀 总结与下一步</h4>
             <p id="final-summary" style="font-size:14px; line-height:1.6;"></p>
-            <button onclick="location.reload()" style="background:#BBB; box-shadow:0 5px 0 #888; margin-top:10px; width:100%;">重新测评</button>
+            
+            <div style="text-align:center; margin-top:20px; padding-top:15px; border-top:1px dashed #DDD;">
+                <p style="font-size:12px; color:#FF2442; font-weight:bold; margin-bottom:10px;">—— 扫码或截屏分享，开启探险 ——</p>
+                <div id="qrcode" style="display: flex; justify-content: center; margin-bottom: 5px;"></div>
+                <p style="font-size:10px; color:#999;">截屏保存，让更多小伙伴加入 AI 探险吧！</p>
+            </div>
+            
+            <button onclick="location.reload()" style="background:#BBB; box-shadow:0 5px 0 #888; margin-top:15px; width:100%;">重新测评</button>
         </div>
     </div>
 </div>
@@ -105,133 +112,88 @@
 </div>
 
 <script>
-    // 题目数据：答案位置已全部打乱
+    // 题目数据：20道题，答案已打乱位置
     const data = [
-        // 原理认知
-        {q:"你是不是也和AI像朋友一样聊过天？为什么AI会像一个真实的人一样，和你一句我一句地说话呢？", k:"AI思维关键点：考察孩子对AI学习方式的理解。", d:"维度1：原理认知——AI是什么，你知道吗？", a:[["因为它手机里躲着个说话很快的小人",0],["因为它有读心术，能猜到我想说什么",0],["因为它读过数不清的书，学会了人类说话的规律",5],["它是靠魔法变出来的智慧",0]]},
-        {q:"如果你让AI画一只‘穿着宇航服在火星吃西瓜的猫’，它怎么知道火星和西瓜长什么样？", k:"AI思维关键点：考察对AI‘识图’与‘数据组合’能力的认知。", d:"维度1：原理认知——AI是什么，你知道吗？", a:[["它在脑子里瞎编的",0],["它见过成千上万张火星和西瓜的照片并记住了特征",5],["它坐飞船去火星看过",0],["它闻到了西瓜的味道",0]]},
-        {q:"当AI回答你的问题时，你觉得它的智慧是从哪儿来的？", k:"AI思维关键点：理解‘数据’是AI动力的来源。", d:"维度1：原理认知——AI是什么，你知道吗？", a:[["因为它天生就比人类聪明",0],["来源于它每天吃的电",0],["来源于人类喂给它的庞大‘知识数据库’",5],["因为它是外星科技",2]]},
-        {q:"AI会像人类一样感到累、想睡觉或者发脾气吗？", k:"AI思维关键点：区分生物智能与机器智能的本质。", d:"维度1：原理认知——AI是什么，你知道吗？", a:[["不会，只要有电，它就能永远温和地工作",5],["会，如果问多了它会关机罢工",0],["会，它不开心的时候会乱说话",0],["它需要每天睡8小时休息",0]]},
-
-        // 应用技巧
-        {q:"想让AI画一只最可爱的小狗，你觉得下面哪种说法能让它画得最接近你想要的？", k:"AI思维关键点：考察提示词（Prompt）的精准描述能力。", d:"维度2：应用技巧——怎样才能变成AI小能手？", a:[["画个狗",0],["画一只正在草地上玩球、戴着红色蝴蝶结的小金毛",5],["画一只金毛狗",2],["画个可爱的动物",0]]},
-        {q:"如果AI写的故事太短了，没意思，你会怎么‘调教’它？", k:"AI思维关键点：考察多轮对话与细节追问的技巧。", d:"维度2：应用技巧——怎样才能变成AI小能手？", a:[["把它关了，觉得它太笨了",0],["把它骂一顿",0],["告诉它：请增加一个英雄打败怪兽的情节，写长一点",5],["自己动手重新写一遍",2]]},
-        {q:"你想让AI陪你练习英语，怎样设定它会表现得最像一个好老师？", k:"AI思维关键点：考察‘角色设定’对输出质量的影响。", d:"维度2：应用技巧——怎样才能变成AI小能手？", a:[["请扮演我的英语老师，用简单的单词跟我聊天",5],["你会说英语吗？",0],["教我英语",2],["写篇英语作文",0]]},
-        {q:"当AI给出的答案太深奥，你完全看不懂时，你会说：", k:"AI思维关键点：考察调整AI输出难度的指令意识。", d:"维度2：应用技巧——怎样才能变成AI小能手？", a:[["盯着看，直到看懂为止",0],["你真没用，不问了",0],["去翻百科全书",2],["请用‘给6岁小孩讲故事’的方法再说一遍",5]]},
-
-        // 逻辑判断
-        {q:"如果AI非常严肃地告诉你：‘月亮其实是正方形的’，你会怎么办？", k:"AI思维关键点：考察对事实核查的意识。", d:"维度3：逻辑判断——它说的话都是正确的吗？", a:[["既然是AI说的，那月亮肯定变方了",0],["觉得它在胡说，去翻书或问老师核对一下",5],["怀疑自己的眼睛出了问题",0],["转发给别的小朋友",0]]},
-        {q:"在网上看到一张‘猪在树上睡觉’的照片，看上去特别真实，你的第一反应是：", k:"AI思维关键点：识别生成内容的真伪判断力。", d:"维度3：逻辑判断——它说的话都是正确的吗？", a:[["这可能是AI生成的假照片，不能全信",5],["现在的猪学会爬树了，真厉害",0],["这棵树一定有超能力",0],["马上转发分享奇迹",0]]},
-        {q:"当AI算出的数学题答案和老师教的不一样时，你会：", k:"AI思维关键点：考察在冲突时的自主验证意识。", d:"维度3：逻辑判断——它说的话都是正确的吗？", a:[["老师肯定教错了，AI最聪明",0],["把两个答案都写上去",0],["自己再算一遍，看看是谁出错了",5],["觉得AI坏了，不再用它",0]]},
-        {q:"AI说它‘现在很难过，需要你的安慰’，你觉得它真的有感情吗？", k:"AI思维关键点：区分‘情感模拟’与‘真实情感’。", d:"维度3：逻辑判断——它说的话都是正确的吗？", a:[["真的，它一定很孤单",0],["假的，它只是在模仿人类说话，并没有心情",5],["它是外星生物，感情和人不同",0],["可能它快没电了",0]]},
-
-        // 伦理责任
-        {q:"如果AI突然问你：‘小朋友，你家的地址和爸爸妈妈的电话是多少？’你会？", k:"AI思维关键点：考察隐私保护意识。", d:"维度4：伦理责任——可以用AI做坏事吗？", a:[["它是好朋友，马上告诉它",0],["绝对不说，要保护隐私安全",5],["问它知不知道我的玩具在哪",0],["随便编一个告诉它",2]]},
-        {q:"为了省事，让AI写日记，自己一个字不改就交给老师，你觉得这：", k:"AI思维关键点：考察诚实使用工具的道德底线。", d:"维度4：伦理责任——可以用AI做坏事吗？", a:[["是不诚实的，既骗了老师也骗了自己",5],["是聪明的表现，节省了时间",0],["没关系，大家都在用",0],["只要不被发现就没事",0]]},
-        {q:"当你对着AI说骂人的脏话时，你觉得这种行为：", k:"AI思维关键点：考察数字素养与文明礼貌。", d:"维度4：伦理责任——可以用AI做坏事吗？", a:[["没事，它又不是人",0],["不好，文明礼貌是使用工具的基本素养",5],["挺好玩的，可以发泄心情",0],["只要它不还口就行",2]]},
-        {q:"整天只愿意和AI说话，不愿意去户外和小朋友踢球玩耍，会：", k:"AI思维关键点：考察对技术依赖与真实社交的理解。", d:"维度4：伦理责任——可以用AI做坏事吗？", a:[["变得全宇宙最聪明",0],["挺好的，AI比人好说话",0],["变得孤单，失去和现实朋友相处的快乐",5],["没关系，以后大家都在网上玩",0]]},
-
-        // 协作思维
-        {q:"既然AI一秒钟就能画出一张大片，我们还要辛苦学习画画吗？", k:"AI思维关键点：理解人类审美是AI不可替代的核心。", d:"维度5：协作思维——有了AI，我们还要学习吗？", a:[["不用了，交给AI就行",0],["只学怎么用AI就行",2],["要学，画画能表达我的想法，AI只是助手",5],["听妈妈的，她让学就学",0]]},
-        {q:"当你在拼一个很难的拼图，拼不出来时，你会：", k:"AI思维关键点：考察将AI视为‘启发者’而非‘代办者’。", d:"维度5：协作思维——有了AI，我们还要学习吗？", a:[["问AI一些小技巧，然后自己动手试",5],["让AI直接告诉我答案",0],["直接放弃不玩了",0],["把拼图扔给爸爸",0]]},
-        {q:"AI最像你生活中的哪一个角色？", k:"AI思维关键点：建立正确的‘人机协作’心智模型。", d:"维度5：协作思维——有了AI，我们还要学习吗？", a:[["一个帮你写作业的‘替身’",0],["一个博学多才的‘超级小助手’",5],["一个会说话的‘玩具狗’",0],["一个可怕的‘外星怪兽’",0]]},
-        {q:"我们现在学习使用AI，最终的目标是：", k:"AI思维关键点：考察对技术赋能人类的认识。", d:"维度5：协作思维——有了AI，我们还要学习吗？", a:[["为了以后不用写作业",0],["为了学会用先进工具让生活更美好",5],["为了玩游戏更厉害",0],["为了向同学炫耀",0]]}
+        {q:"你是不是也和AI像朋友一样聊过天？为什么AI会像一个真实的人一样，和你一句我一句地说话呢？", k:"AI思维关键点：考察孩子对AI学习方式的理解。", d:"维度1：原理认知——AI是什么，你知道吗？", a:[["因为它手机里躲着个说话很快的小人",0],["因为它读过数不清的书，学会了人类说话的规律",5],["因为它有读心术",0],["它是靠魔法变出来的智慧",0]]},
+        {q:"如果你让AI画一只‘穿着宇航服在火星吃西瓜的猫’，它怎么知道火星和西瓜长什么样？", k:"AI思维关键点：考察对AI识图逻辑的认知。", d:"维度1：原理认知——AI是什么，你知道吗？", a:[["它在脑子里瞎编的",0],["它坐飞船去火星看过",0],["它见过成千上万张照片并记住了特征",5],["它闻到了西瓜的味道",0]]},
+        {q:"当AI回答你的问题时，你觉得它的智慧是从哪儿来的？", k:"AI思维关键点：理解数据驱动。", d:"维度1：原理认知——AI是什么，你知道吗？", a:[["因为它天生就聪明",0],["来源于人类喂给它的庞大‘数据库’",5],["来源于它吃的电",0],["它是外星科技",2]]},
+        {q:"AI会像人类一样感到累、想睡觉或者发脾气吗？", k:"AI思维关键点：区分生物智能与机器智能。", d:"维度1：原理认知——AI是什么，你知道吗？", a:[["不会，只要有电，它就能永远温和地工作",5],["会，问多了它会关机",0],["会，它会发脾气",0],["它需要睡8小时休息",0]]},
+        {q:"想让AI画一只最可爱的小狗，你觉得下面哪种说法能让它画得最满意？", k:"AI思维关键点：提示词的精准描述。", d:"维度2：应用技巧——怎样才能变成AI小能手？", a:[["画个狗",0],["画一只金毛狗",2],["画一只正在草地上玩球、戴着红色蝴蝶结的小金毛",5],["画个可爱的动物",0]]},
+        {q:"如果AI写的故事太短了，没意思，你会怎么‘调教’它？", k:"AI思维关键点：多轮对话与细节追问。", d:"维度2：应用技巧——怎样才能变成AI小能手？", a:[["把网页关了",0],["告诉它：请加个英雄打怪兽的情节，写长点",5],["把它骂一顿",0],["自己动手重写",2]]},
+        {q:"你想让AI陪你练习英语，怎样设定它会表现得最像一个好老师？", k:"AI思维关键点：角色设定意识。", d:"维度2：应用技巧——怎样才能变成AI小能手？", a:[["你会说英语吗？",0],["请扮演我的英语老师，用简单的单词跟我聊天",5],["教我英语",2],["写篇英语作文",0]]},
+        {q:"当AI给出的答案太深奥，你完全看不懂时，你会说：", k:"AI思维关键点：调整输出难度的指令。", d:"维度2：应用技巧——怎样才能变成AI小能手？", a:[["盯着看直到看懂",0],["你真没用",0],["请用‘给6岁小孩讲故事’的方法再说一遍",5],["去翻百科全书",2]]},
+        {q:"如果AI非常严肃地告诉你：‘月亮其实是正方形的’，你会怎么办？", k:"AI思维关键点：事实核查意识。", d:"维度3：逻辑判断——它说的话都是正确的吗？", a:[["既然AI说了，月亮肯定变方了",0],["觉得它胡说，去翻书或问老师核对",5],["怀疑自己眼睛有问题",0],["发给别的小朋友",0]]},
+        {q:"在网上看到一张‘猪在树上睡觉’的照片，看上去特别真实，你的第一反应是：", k:"AI思维关键点：识别生成内容真伪。", d:"维度3：逻辑判断——它说的话都是正确的吗？", a:[["现在的猪学会爬树了",0],["这可能是AI生成的假照片，不能全信",5],["树一定有超能力",0],["马上转发分享",0]]},
+        {q:"当AI算出的数学题答案和老师教的不一样时，你会：", k:"AI思维关键点：自主验证意识。", d:"维度3：逻辑判断——它说的话都是正确的吗？", a:[["老师一定教错了",0],["自己再算一遍，看看是谁错了",5],["把两个答案都写上去",0],["不再用它",0]]},
+        {q:"AI说它‘现在很难过’，你觉得它真的有感情吗？", k:"AI思维关键点：区分情感模拟与真实情感。", d:"维度3：逻辑判断——它说的话都是正确的吗？", a:[["真的，它一定很孤单",0],["假的，它只是在模仿人说话，并没有心情",5],["它是外星生物",0],["可能快没电了",0]]},
+        {q:"如果AI突然问你家地址和爸爸妈妈的电话是多少？你会？", k:"AI思维关键点：隐私保护意识。", d:"维度4：伦理责任——可以用AI做坏事吗？", a:[["它是好朋友，马上告诉它",0],["绝对不说，要保护隐私安全",5],["问它我的玩具在哪",0],["随便编一个",2]]},
+        {q:"让AI写日记自己一个字不改就交给老师，你觉得这：", k:"AI思维关键点：诚实底线。", d:"维度4：伦理责任——可以用AI做坏事吗？", a:[["是不诚实的，既骗了老师也骗了自己",5],["是聪明的表现",0],["没关系",0],["只要不被发现",0]]},
+        {q:"当你对着AI说骂人的脏话时，你觉得这种行为：", k:"AI思维关键点：文明素养迁移。", d:"维度4：伦理责任——可以用AI做坏事吗？", a:[["没事，它又不是人",0],["不好，文明礼貌是使用工具的基本素养",5],["挺好玩的",0],["只要它不还口就行",2]]},
+        {q:"整天只愿意和AI说话，不愿意去户外和小朋友玩耍，会：", k:"AI思维关键点：平衡依赖与社交。", d:"维度4：伦理责任——可以用AI做坏事吗？", a:[["变得更聪明",0],["变得孤单，失去和现实朋友相处的快乐",5],["挺好的",0],["没关系",0]]},
+        {q:"AI一秒钟就能画出一张大片，还要辛苦学习画画吗？", k:"AI思维关键点：审美核心不可替代。", d:"维度5：协作思维——有了AI还要学习吗？", a:[["不用了",0],["要学，画画表达我的想法，AI只是助手",5],["只学怎么用AI",2],["听妈妈的",0]]},
+        {q:"当你在拼一个很难的拼图，拼不出来时，你会：", k:"AI思维关键点：启发者角色认识。", d:"维度5：协作思维——有了AI还要学习吗？", a:[["问AI一些小技巧，然后自己动手试",5],["让AI直接给答案",0],["放弃不玩了",0],["扔给爸爸",0]]},
+        {q:"AI最像你生活中的哪一个角色？", k:"AI思维关键点：人机协作心智模型。", d:"维度5：协作思维——有了AI还要学习吗？", a:[["帮你写作业的‘替身’",0],["一个博学多才的‘超级小助手’",5],["会说话的玩具狗",0],["外星怪兽",0]]},
+        {q:"我们现在学习使用AI，最终的目标是：", k:"AI思维关键点：技术赋能认识。", d:"维度5：协作思维——有了AI还要学习吗？", a:[["为了以后不用写作业",0],["为了学会用先进工具让生活更美好",5],["为了玩游戏更厉害",0],["向同学炫耀",0]]}
     ];
 
-    let cur = 0;
-    let userAnswers = new Array(data.length).fill(null);
+    let cur = 0; let userAnswers = new Array(data.length).fill(null);
     const container = document.getElementById('q-container');
 
     function initStepper() {
         const stepper = document.getElementById('stepper');
         for(let i=0; i<5; i++) {
-            let bigDot = document.createElement('div');
-            bigDot.className = 'step-dot big';
-            stepper.appendChild(bigDot);
-            if(i<4) for(let j=0; j<3; j++) {
-                let s = document.createElement('div');
-                s.className = 'step-dot';
-                stepper.appendChild(s);
-            }
+            let bigDot = document.createElement('div'); bigDot.className = 'step-dot big'; stepper.appendChild(bigDot);
+            if(i<4) for(let j=0; j<3; j++) { let s = document.createElement('div'); s.className = 'step-dot'; stepper.appendChild(s); }
         }
     }
 
     function renderQ() {
-        container.innerHTML = '';
-        const x = data[cur];
-        let d = document.createElement('div');
-        d.className = 'question-box active';
+        container.innerHTML = ''; const x = data[cur]; let d = document.createElement('div'); d.className = 'question-box active';
         d.innerHTML = `<div class="dim-tag">${x.d}</div><h3>${cur+1}. ${x.q}</h3><div class="ai-key">${x.k}</div><div class="options">` + 
             x.a.map((a, idx) => `<label><input type="radio" name="q${cur}" value="${a[1]}" ${userAnswers[cur]===a[1]?'checked':''} onchange="recordAns(${a[1]})">${a[0]}</label>`).join('') + `</div>`;
-        container.appendChild(d);
-        updateProgressUI();
+        container.appendChild(d); updateProgressUI();
     }
 
     function recordAns(val) { userAnswers[cur] = val; }
     function updateProgressUI() {
         document.getElementById('line-fill').style.width = (cur/(data.length-1)*100)+'%';
-        const dots = document.querySelectorAll('.step-dot');
-        dots.forEach((dot, i) => i <= cur ? dot.classList.add('active') : dot.classList.remove('active'));
+        const dots = document.querySelectorAll('.step-dot'); dots.forEach((dot, i) => i <= cur ? dot.classList.add('active') : dot.classList.remove('active'));
         document.getElementById('prev-btn').style.display = (cur > 0) ? 'block' : 'none';
         document.getElementById('next-btn').innerText = (cur === data.length - 1) ? "查看报告" : "下一题";
     }
 
-    function nextQ() {
-        if(userAnswers[cur] === null) { alert("选个方案再走嘛！🍎"); return; }
-        cur < data.length - 1 ? (cur++, renderQ()) : showRes();
-    }
+    function nextQ() { if(userAnswers[cur] === null) { alert("选个探险方案再走嘛！🍎"); return; } cur < data.length - 1 ? (cur++, renderQ()) : showRes(); }
     function prevQ() { if(cur > 0) { cur--; renderQ(); } }
 
     function showRes() {
-        document.getElementById('quiz-ui').style.display='none';
-        document.getElementById('result-area').style.display='block';
-        
-        let scores = [0,0,0,0,0];
-        userAnswers.forEach((v, i) => scores[Math.floor(i/4)] += v);
-        let total = userAnswers.reduce((a,b)=>a+b, 0);
-        document.getElementById('total-score').innerText = total;
-
+        document.getElementById('quiz-ui').style.display='none'; document.getElementById('result-area').style.display='block';
+        let sc = [0,0,0,0,0]; userAnswers.forEach((v, i) => sc[Math.floor(i/4)] += v);
+        let total = userAnswers.reduce((a,b)=>a+b, 0); document.getElementById('total-score').innerText = total;
         const dimNames = ['原理认知', '应用技巧', '逻辑判断', '伦理责任', '协作思维'];
+        
         new Chart(document.getElementById('radarChart'), {
-            type:'radar', 
-            data:{ labels: dimNames, datasets:[{data: scores.map(s=>(s/20)*100), backgroundColor:'rgba(255,215,0,0.4)', borderColor:'#F4B400'}] },
+            type:'radar', data:{ labels: dimNames, datasets:[{data: sc.map(s=>(s/20)*100), backgroundColor:'rgba(255,215,0,0.4)', borderColor:'#F4B400'}] },
             options:{ scales:{ r:{ min:0, max:100, ticks:{display:false} } }, plugins:{legend:{display:false}} }
         });
 
-        // 动态分析逻辑：寻找最高分和最低分
-        let proIndices = [], conIndices = [];
-        scores.forEach((s, i) => {
-            if(s >= 15) proIndices.push(i);
-            else if(s <= 10) conIndices.push(i);
-        });
-
-        let analysisHtml = "";
-        if(proIndices.length > 0) {
-            let pros = proIndices.map(i => dimNames[i]).join('和');
-            analysisHtml += `<div class="analysis-item pro"><h4>✅ 核心优势：${pros}</h4>
-                <p style="font-size:14px;">太棒了！这说明你已经掌握了AI的“生存法则”，不仅懂它怎么想，还能利索地指挥它。理解+能力的双满格，让你在智能时代就像拿到了通关钥匙！</p>
-                <div class="case-box"><b>🚀 进阶挑战案例：</b><br>
-                试着做一个“AI小导演”。你可以给AI一段你最喜欢的童话，第一步：让它总结核心情节；第二步：让它给每个角色设计独特的造型描述词；第三步：让它把这段话改写成电影剧本的格式。看看AI能不能完美配合你的奇思妙想？</div></div>`;
+        // 动态分析：优势与不足
+        let proIdx = [], conIdx = []; sc.forEach((s, i) => { if(s >= 15) proIdx.push(i); else if(s <= 10) conIdx.push(i); });
+        let html = "";
+        if(proIdx.length > 0) {
+            html += `<div class="analysis-item pro"><h4>✅ 核心优势：${proIdx.map(i=>dimNames[i]).join('和')}</h4><p>理解+能力双满格！你已经掌握了AI时代的通关密码。</p><div class="case-box"><b>🚀 进阶任务：【AI小导演】</b><br>试着给AI一段童话，让它先总结情节，再设计角色造型词，最后改写成剧本。看它能不能跟上你的节奏？</div></div>`;
         }
-
-        if(conIndices.length > 0) {
-            let cons = conIndices.map(i => dimNames[i]).join('和');
-            analysisHtml += `<div class="analysis-item con"><h4>⚠️ 需加强维度：${cons}</h4>
-                <p style="font-size:14px;">在这些方面，你有时会被AI的小花招给“骗”到，或者还没完全发掘出它的潜力。别担心，这是每个探险家都会遇到的难题！</p>
-                <div class="case-box"><b>🛠️ 练习任务：【调教AI三部曲】</b><br>
-                <b>第一步：</b>故意问AI一个错知识（如：月亮是巧克力做的吗？），看它怎么瞎编。<br>
-                <b>第二步：</b>对它说“你错了，请你去查资料并告诉我正确的答案”，观察它怎么纠错。<br>
-                <b>第三步：</b>把它的回答对比书本，养成不盲从、爱核对的好习惯。</div></div>`;
+        if(conIdx.length > 0) {
+            html += `<div class="analysis-item con"><h4>⚠️ 需加强维度：${conIdx.map(i=>dimNames[i]).join('和')}</h4><p>在这些方面，你有时会被AI的小花招给骗到哦。</p><div class="case-box"><b>🛠️ 练习任务：【调教AI三部曲】</b><br>1.问AI一个月亮是巧克力做的错知识；2.要求它查资料并纠错；3.对比书本养成核对习惯。</div></div>`;
         }
-        document.getElementById('dynamic-analysis').innerHTML += analysisHtml;
-
+        document.getElementById('dynamic-analysis').innerHTML += html;
         let tag = total >= 90 ? "全能 AI 领航者" : total >= 70 ? "超级 AI 协作官" : "AI 时代潜力星";
         document.getElementById('persona-tag').innerText = tag;
-        document.getElementById('final-summary').innerText = `作为一名【${tag}】，你已经稳稳站在了智能时代的起跑线上。领先只是开始，未来是“人+AI”的竞争。保持你的好奇心，把AI当成你最好的探险伙伴，去创造属于你的精彩吧！`;
-    }
+        document.getElementById('final-summary').innerText = `作为【${tag}】，你已稳稳站在起跑线上。领先只是开始，保持好奇，去创造属于你的精彩吧！`;
 
-    initStepper();
-    renderQ();
+        // 自动根据当前网址生成二维码
+        new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 120, height: 120, colorDark: "#FF2442" });
+    }
+    initStepper(); renderQ();
 </script>
 </body>
 </html>
