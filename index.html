@@ -8,31 +8,165 @@
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
         :root { --primary-yellow: #FFD700; --soft-yellow: #FFF9E6; --deep-yellow: #F4B400; --text-color: #5A4012; --bg-color: #FEFDF7; --accent-red: #FF4D4D; }
-        body { font-family: 'PingFang SC', sans-serif; background: var(--bg-color); color: var(--text-color); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+        body { font-family: 'PingFang SC', sans-serif; background: var(--bg-color); color: var(--text-color); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
         
-        /* 容器适配手机，去掉多余边距 */
-        .container { width: 100%; max-width: 500px; background: white; padding: 20px; border-radius: 25px; border: 3px solid var(--primary-yellow); box-shadow: 0 6px 0 var(--primary-yellow); box-sizing: border-box; margin-bottom: 20px; }
+        /* 核心容器：将测试和名片包在一起 */
+        .wrapper { width: 100%; max-width: 450px; display: flex; flex-direction: column; gap: 0; }
+
+        .container { background: white; padding: 15px 20px; border-radius: 25px 25px 0 0; border: 3px solid var(--primary-yellow); border-bottom: none; box-sizing: border-box; }
         
-        .header h1 { color: var(--deep-yellow); font-size: 22px; margin: 0; text-align: center; }
+        .header h1 { color: var(--deep-yellow); font-size: 20px; margin: 5px 0; text-align: center; }
         
-        /* 进度条减小尺寸适配手机 */
-        .progress-stepper { display: flex; justify-content: space-between; align-items: center; margin: 20px 0; padding: 0 5px; position: relative; }
-        .step-dot { width: 8px; height: 8px; background: #DDD; border-radius: 50%; z-index: 2; position: relative; }
+        /* 紧凑版进度条 */
+        .progress-stepper { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; padding: 0 5px; position: relative; }
+        .step-dot { width: 6px; height: 6px; background: #DDD; border-radius: 50%; z-index: 2; }
         .step-dot.active { background: var(--deep-yellow); }
-        .step-dot.big { width: 14px; height: 14px; border: 2px solid var(--primary-yellow); background: white; }
+        .step-dot.big { width: 12px; height: 12px; border: 2px solid var(--primary-yellow); background: white; }
         .step-dot.big.active { background: var(--deep-yellow); }
-        .progress-line { position: absolute; top: 50%; left: 5px; right: 5px; height: 3px; background: #EEE; transform: translateY(-50%); z-index: 1; }
+        .progress-line { position: absolute; top: 50%; left: 5px; right: 5px; height: 2px; background: #EEE; transform: translateY(-50%); z-index: 1; }
         .progress-line-fill { position: absolute; top: 0; left: 0; height: 100%; background: var(--primary-yellow); width: 0%; }
 
-        .question-box { display: none; }
+        .question-box { display: none; min-height: 220px; }
         .question-box.active { display: block; }
         
-        .dim-tag { display: block; text-align: center; padding: 8px; background: var(--soft-yellow); border-radius: 15px; font-size: 13px; font-weight: bold; color: var(--deep-yellow); margin-bottom: 12px; border: 1px dashed var(--primary-yellow); }
-        h3 { font-size: 17px; line-height: 1.4; margin-bottom: 12px; }
-        .ai-key { font-size: 11px; color: #996600; background: #FFF9E6; padding: 6px 10px; border-radius: 8px; margin-bottom: 12px; display: inline-block; border-left: 3px solid var(--primary-yellow); }
+        .dim-tag { display: inline-block; padding: 4px 12px; background: var(--soft-yellow); border-radius: 10px; font-size: 12px; font-weight: bold; color: var(--deep-yellow); margin-bottom: 8px; border: 1px solid var(--primary-yellow); }
+        h3 { font-size: 16px; line-height: 1.4; margin: 0 0 10px 0; }
 
-        .options label { display: block; background: #FFF; padding: 12px; margin: 8px 0; border: 2px solid #F0F0F0; border-radius: 12px; cursor: pointer; font-size: 15px; }
+        .options label { display: block; background: #FFF; padding: 10px 15px; margin: 6px 0; border: 1.5px solid #F0F0F0; border-radius: 12px; cursor: pointer; font-size: 14px; }
         .options input { display: none; }
         .options label:has(input:checked) { background: var(--soft-yellow) !important; border-color: var(--primary-yellow); font-weight: bold; }
 
-        .btn-group { display: flex; gap: 1
+        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
+        button { flex: 2; background: var(--deep-yellow); color: white; border: none; padding: 12px; border-radius: 50px; font-size: 16px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 0 #D49C00; }
+        .prev-btn { flex: 1; background: #EEE; color: #999; box-shadow: 0 4px 0 #CCC; }
+
+        /* 底部名片：与容器无缝连接 */
+        .planner-footer { 
+            background: #FF2442; 
+            color: white; 
+            padding: 12px; 
+            border-radius: 0 0 25px 25px; 
+            text-align: center; 
+            border: 3px solid var(--primary-yellow);
+            border-top: 1px dashed rgba(255,255,255,0.3);
+            box-shadow: 0 6px 0 var(--primary-yellow);
+        }
+        .planner-footer b { font-size: 16px; display: block; letter-spacing: 1px; }
+        .planner-footer span { font-size: 13px; font-weight: bold; background: rgba(255,255,255,0.2); padding: 2px 10px; border-radius: 5px; display: inline-block; margin-top: 4px; }
+
+        /* 报告页适配 */
+        #result-area { display: none; }
+        .report-card { background: #FFF; border-radius: 15px; padding: 12px; margin-bottom: 12px; border: 1px solid #EEE; }
+        .highlight-tag { color: var(--accent-red); font-weight: bold; font-size: 18px; }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <div class="container">
+        <div id="quiz-ui">
+            <div class="header"><h1>AI思维5维测试</h1></div>
+            <div class="progress-stepper" id="stepper">
+                <div class="progress-line"><div class="progress-line-fill" id="line-fill"></div></div>
+            </div>
+            <div id="q-container"></div>
+            <div class="btn-group">
+                <button class="prev-btn" id="prev-btn" onclick="prevQ()" style="display:none;">返回</button>
+                <button id="next-btn" onclick="nextQ()">下一题</button>
+            </div>
+        </div>
+        
+        <div id="result-area">
+            <div class="header"><h1>探险报告单 📜</h1></div>
+            <div class="report-card">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                    <div style="text-align:center; flex:1; background:var(--soft-yellow); padding:8px; border-radius:15px;">
+                        <span style="font-size:11px;">探索分</span><br>
+                        <big id="total-score" style="font-size:30px; color:var(--accent-red); font-weight:bold;">0</big>
+                    </div>
+                    <div style="flex:2; font-size:13px;">你是<br><span id="persona-tag" class="highlight-tag">潜力星</span> 哦！🐾</div>
+                </div>
+                <canvas id="radarChart" style="max-height: 180px;"></canvas>
+            </div>
+            <div id="dynamic-analysis"></div>
+            <div style="text-align:center; padding:10px 0;">
+                <div id="qrcode" style="display: flex; justify-content: center; margin-bottom: 5px;"></div>
+                <p style="font-size:10px; color:#999;">截屏保存，开启探险</p>
+                <button onclick="location.reload()" style="background:#BBB; font-size:12px; padding:5px 15px; width:auto;">重新测试</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="planner-footer">
+        <b>小红书：@黄苹果老师</b>
+        <span>青少儿童AI素养发展规划师</span>
+    </div>
+</div>
+
+<script>
+    // 题目数据 (保持不变)
+    const data = [
+        {q:"你是不是也和AI像朋友一样聊过天？为什么AI会像一个真实的人一样说话呢？", k:"考察对AI学习方式的理解。", d:"维度1：原理认知", a:[["手机里躲着小人",0],["它学会了人类说话的规律",5],["它有读心术",0],["它是魔法",0]]},
+        {q:"让AI画一只‘在火星吃西瓜的猫’，它怎么知道火星长什么样？", k:"考察对AI识图逻辑的认知。", d:"维度1：原理认知", a:[["在脑子里瞎编的",0],["坐飞船去过",0],["见过成千上万张照片并记住了特征",5],["闻到了味道",0]]},
+        {q:"当AI回答你的问题时，你觉得它的智慧是从哪儿来的？", k:"理解数据驱动。", d:"维度1：原理认知", a:[["天生聪明",0],["来源于庞大的‘数据库’",5],["来源于电",0],["外星科技",2]]},
+        {q:"AI会像人类一样感到累、想睡觉或者发脾气吗？", k:"区分生物智能与机器智能。", d:"维度1：原理认知", a:[["不会，只要有电就能工作",5],["会，问多会罢工",0],["会发脾气",0],["睡8小时",0]]},
+        {q:"想让AI画一只最可爱的小狗，哪种说法能让它最满意？", k:"提示词的精准描述。", d:"维度2：应用技巧", a:[["画个狗",0],["画一只金毛狗",2],["画一只在草地上玩球、戴红蝴蝶结的小金毛",5],["画个可爱动物",0]]},
+        {q:"如果AI写的故事太短了，你会怎么‘调教’它？", k:"多轮对话与细节追问。", d:"维度2：应用技巧", a:[["关掉页面",0],["告诉它：加个英雄打怪兽情节，写长点",5],["骂它一顿",0],["自己重写",2]]},
+        {q:"你想让AI陪你练习英语，怎样设定最像老师？", k:"角色设定意识。", d:"维度2：应用技巧", a:[["你会说英语吗？",0],["扮演英语老师，用简单单词聊天",5],["教我英语",2],["写篇作文",0]]},
+        {q:"当AI回答太深奥看不懂时，你会说：", k:"调整输出难度。", d:"维度2：应用技巧", a:[["盯着直到看懂",0],["请用‘给6岁小孩讲故事’的方法说一遍",5],["你真没用",0],["翻百科全书",2]]},
+        {q:"如果AI说：‘月亮其实是正方形的’，你会？", k:"事实核查意识。", d:"维度3：逻辑判断", a:[["AI说了肯定变方了",0],["觉得它胡说，去翻书核对",5],["怀疑眼睛有问题",0],["发给小伙伴",0]]},
+        {q:"看到‘猪在树上睡觉’的照片特别真实，你的反应是：", k:"识别生成内容真伪。", d:"维度3：逻辑判断", a:[["猪学会爬树了",0],["可能是AI生成的假照片，不能全信",5],["树有超能力",0],["马上转发",0]]},
+        {q:"AI算的数学题和老师教的不一样，你会：", k:"自主验证意识。", d:"维度3：逻辑判断", a:[["老师教错了",0],["自己再算一遍，看谁错了",5],["两个都写",0],["不再用它",0]]},
+        {q:"AI说它‘很难过’，你觉得它有感情吗？", k:"区分情感模拟。", d:"维度3：逻辑判断", a:[["真的",0],["假的，它只是在模仿人说话",5],["外星生物",0],["快没电了",0]]},
+        {q:"如果AI问你家地址和父母电话，你会？", k:"隐私保护意识。", d:"维度4：伦理责任", a:[["马上告诉它",0],["绝对不说，保护隐私",5],["问它玩具在哪",0],["随便编一个",2]]},
+        {q:"让AI写日记一字不改交给老师，你觉得：", k:"诚实底线。", d:"维度4：伦理责任", a:[["是不诚实的",5],["聪明表现",0],["没关系",0],["只要不被发现",0]]},
+        {q:"对着AI说骂人的脏话，这种行为：", k:"文明素养迁移。", d:"维度4：伦理责任", a:[["没事",0],["不好，文明礼貌是基本素养",5],["挺好玩",0],["它不还口",2]]},
+        {q:"只愿和AI说话，不愿和小朋友玩，会：", k:"平衡依赖与社交。", d:"维度4：伦理责任", a:[["变聪明",0],["变孤单，失去现实朋友",5],["挺好",0],["没关系",0]]},
+        {q:"AI一秒画大片，还要辛苦学画画吗？", k:"审美核心不可替代。", d:"维度5：协作思维", a:[["不用了",0],["要学，画画表达想法，AI只是助手",5],["只学用AI",2],["听妈妈的",0]]},
+        {q:"拼图拼不出来时，你会：", k:"启发者角色认识。", d:"维度5：协作思维", a:[["问AI技巧，然后自己动手",5],["让AI给答案",0],["放弃了",0],["扔给爸爸",0]]},
+        {q:"AI最像你生活中的哪一个角色？", k:"人机协作心智模型。", d:"维度5：协作思维", a:[["作业‘替身’",0],["博学多才的‘超级助手’",5],["会说话玩具狗",0],["外星怪兽",0]]},
+        {q:"我们学习使用AI，最终目标是：", k:"技术赋能认识。", d:"维度5：协作思维", a:[["以后不用写作业",0],["学会用先进工具让生活更美好",5],["玩游戏厉害",0],["向同学炫耀",0]]}
+    ];
+
+    let cur = 0; let userAnswers = new Array(data.length).fill(null);
+    const container = document.getElementById('q-container');
+    function initStepper() {
+        const stepper = document.getElementById('stepper');
+        for(let i=0; i<5; i++) {
+            let bigDot = document.createElement('div'); bigDot.className = 'step-dot big'; stepper.appendChild(bigDot);
+            if(i<4) for(let j=0; j<3; j++) { let s = document.createElement('div'); s.className = 'step-dot'; stepper.appendChild(s); }
+        }
+    }
+    function renderQ() {
+        container.innerHTML = ''; const x = data[cur]; let d = document.createElement('div'); d.className = 'question-box active';
+        d.innerHTML = `<div class="dim-tag">${x.d}</div><h3>${x.q}</h3><div class="options">` + 
+            x.a.map((a, idx) => `<label><input type="radio" name="q${cur}" value="${a[1]}" ${userAnswers[cur]===a[1]?'checked':''} onchange="recordAns(${a[1]})">${a[0]}</label>`).join('') + `</div>`;
+        container.appendChild(d); updateProgressUI();
+    }
+    function recordAns(val) { userAnswers[cur] = val; }
+    function updateProgressUI() {
+        document.getElementById('line-fill').style.width = (cur/(data.length-1)*100)+'%';
+        const dots = document.querySelectorAll('.step-dot'); dots.forEach((dot, i) => i <= cur ? dot.classList.add('active') : dot.classList.remove('active'));
+        document.getElementById('prev-btn').style.display = (cur > 0) ? 'block' : 'none';
+        document.getElementById('next-btn').innerText = (cur === data.length - 1) ? "查看结果" : "下一题";
+    }
+    function nextQ() { if(userAnswers[cur] === null) { alert("选一个嘛！🍎"); return; } cur < data.length - 1 ? (cur++, renderQ()) : showRes(); }
+    function prevQ() { if(cur > 0) { cur--; renderQ(); } }
+    function showRes() {
+        document.getElementById('quiz-ui').style.display='none'; document.getElementById('result-area').style.display='block';
+        let sc = [0,0,0,0,0]; userAnswers.forEach((v, i) => sc[Math.floor(i/4)] += v);
+        let total = userAnswers.reduce((a,b)=>a+b, 0); document.getElementById('total-score').innerText = total;
+        const dimNames = ['原理', '技巧', '逻辑', '伦理', '协作'];
+        new Chart(document.getElementById('radarChart'), {
+            type:'radar', data:{ labels: dimNames, datasets:[{data: sc.map(s=>(s/20)*100), backgroundColor:'rgba(255,215,0,0.4)', borderColor:'#F4B400'}] },
+            options:{ scales:{ r:{ min:0, max:100, ticks:{display:false} } }, plugins:{legend:{display:false}} }
+        });
+        let tag = total >= 90 ? "全能领航者" : total >= 70 ? "AI协作官" : "AI潜力星";
+        document.getElementById('persona-tag').innerText = tag;
+        new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 90, height: 90, colorDark: "#FF2442" });
+        window.scrollTo(0, 0);
+    }
+    initStepper(); renderQ();
+</script>
+</body>
+</html>
